@@ -70,7 +70,7 @@ class HiddenMarkovModel():
         #self.initial_state = random.choice([0, 1])
 
     def forward(self):
-        alpha = [np.zeros(self.num_states) for _ in self.doc]
+        self.alphas = [np.zeros(self.num_states) for _ in self.doc]
 
         # For each character
         for char_id in np.arange(len(self.doc)):
@@ -78,7 +78,7 @@ class HiddenMarkovModel():
             if char_id == 0:
                 # Set intial hidden state alpha probs to equal
                 # This assumes an intial start state with no emissions
-                alpha[char_id] = np.repeat(1 / self.num_states, self.num_states)
+                self.alphas[char_id] = np.repeat(1 / self.num_states, self.num_states)
 
                 # Alternatively, set intial state alpha to 1 and all others 0
                 #alpha[char_id][self.initial_state] = 1.
@@ -91,25 +91,25 @@ class HiddenMarkovModel():
             # With emission probs for each of the previous hidden states
             # Should be 1 x num_states
             # [alpha0 * p('e' | s0), alpha1 * p('e' | s1)]
-            intmed = np.multiply(alpha[char_id-1], self.emission[:, vocab_id])
+            intmed = np.multiply(self.alphas[char_id-1], self.emission[:, vocab_id])
 
             # Matrix multiplication to output alpha probs of this time step
             # Each element should be 
             # alpha0next = alpha0 * p('e' | s0) * p (s0 | s0) + alpha1 * p('e' | s1) * p (s0 | s1)
             # Should be 1 x num_states * num_states x num_states = 1 x num_states
-            alpha[char_id] = np.squeeze(np.matmul(intmed, self.transition))
+            self.alphas[char_id] = np.squeeze(np.matmul(intmed, self.transition))
 
         # Final time step, single end state where all alphas are summed
         char_id = -1 # last char
         vocab_id = self.vocab.get(self.doc[char_id])
         # Final sum of all alpha probs, should be scalar
-        marginal_prob = np.matmul(alpha[-1], self.emission[:, vocab_id])
+        marginal_prob = np.matmul(self.alphas[-1], self.emission[:, vocab_id])
         
         return marginal_prob
 
 
     def backward(self):
-        beta = [np.zeros(self.num_states) for _ in self.doc]
+        self.betas = [np.zeros(self.num_states) for _ in self.doc]
 
         # For each character, reverse order
         for char_id in np.flip(np.arange(len(self.doc))):
@@ -120,7 +120,7 @@ class HiddenMarkovModel():
             if char_id == len(self.doc)-1:
                 # Backward prob of last emitting hidden states is just their
                 # prob of emitting the last char
-                beta[char_id] = self.emission[:, vocab_id]
+                self.betas[char_id] = self.emission[:, vocab_id]
                 continue
 
             # Need to unsqueeze beta to make it the right horizontal vector shape
@@ -129,7 +129,7 @@ class HiddenMarkovModel():
             # Should be 2 x 2
             # Looks like [[beta0 * p(s0 | s0), beta1 * p(s1 | s0)],
             #             [beta0 * p(s0 | s1), beta1 * p(s1 | s1)]]
-            prev_beta = np.reshape(beta[char_id+1], (1, self.num_states))
+            prev_beta = np.reshape(self.betas[char_id+1], (1, self.num_states))
             intmed = np.multiply(prev_beta, self.transition)
 
             # Need to unsqueeze emission probs to make it the right vertical vector shape
@@ -140,17 +140,28 @@ class HiddenMarkovModel():
             # Row-wise sum of the previous matrix
             # Result should be beta0next = p('e' | s0) * (beta0 * p(s0 | s0) + beta1 * p(s1 | s0))
             # Should be self.num_states x 1, but is then squeezed
-            beta[char_id] = np.squeeze(np.sum(intmed2, axis=1))
+            self.betas[char_id] = np.squeeze(np.sum(intmed2, axis=1))
 
         # Before first time step, single start state where all betas are summed
         char_id = 0 # first char
         # Final sum of all betas probs, should be scalar
-        marginal_prob = np.matmul(alpha[char_id], beta[char_id])
+        marginal_prob = np.matmul(alpha[char_id], self.betas[char_id])
         
         return marginal_prob
 
 
     def update_params(self):
+        state_probs = np.multiply(self.alphas, self.betas) / marginal_prob
+
+        for char_id in np.arange(len(self.doc)):
+            state_probs[]
+
+
+        state_probs = np.multiply(self.alphas, self.betas) / marginal_prob
+        # transition counts for 1 to 2
+        self.alphas[:, 0] * self.transition * self.emission[:, char_id] * self.betas[:, 1]
+        self.transition = 
+        self.emission = 
 
 
     def _integerize_sentence(self, sentence: Sentence, corpus: TaggedCorpus) -> List[Tuple[int,Optional[int]]]:
