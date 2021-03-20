@@ -16,9 +16,9 @@ import torch
 ap = argparse.ArgumentParser()
 ap.add_argument("eval_file")
 ap.add_argument('--model', default="hmm.py")
-ap.add_argument('--train', nargs='*', default=["../data/icraw"],
+ap.add_argument('--train', nargs='*', default=["../data/train"],
                 help='total number of examples to train on')
-ap.add_argument('--crf', action='store_true')
+ap.add_argument('--alt-init', action='store_true')
 
 args = ap.parse_args()
 

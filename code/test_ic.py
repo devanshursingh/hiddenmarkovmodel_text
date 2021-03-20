@@ -1,15 +1,17 @@
-import logging
+#import logging
 import math
-from pathlib import Path
-from typing import Callable
-
-from corpus import TaggedCorpus
-from eval import model_cross_entropy
-from hmm import HiddenMarkovModel
-from lexicon import build_lexicon
 import torch
+import numpy as np
+from scipy.special import logsumexp
+from softmax import softmax
 
-# Set up logging
+# Test
+d = np.ones((2,2, 5))
+d[:,:, 0] = np.array([[2,1], [3,4]])
+e = np.sum(d, axis=(0,1))
+print(softmax(e, axis=1))
+
+""" #Set up logging
 logging.basicConfig(format="%(levelname)s : %(message)s", level=logging.INFO)  # could change INFO to DEBUG
 torch.autograd.set_detect_anomaly(True)    # uncomment to improve error messages from .backward(), but slows down
 
@@ -56,3 +58,4 @@ hmm.train(corpus=icraw, loss=negative_log_likelihood,
 
 logging.info("*** A, B matrices after reestimation on icraw (SGD, not EM, but still should approximately match final params on spreadsheet [transposed])")
 hmm.printAB()
+"""
